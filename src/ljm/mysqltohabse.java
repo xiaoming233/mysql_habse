@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 public class mysqltohabse {
 
 	private static Logger log = Logger.getLogger(mysqltohabse.class);
+
 	private static Configuration setHbaseConf() {
 		Configuration conf=new Configuration();
 		conf=HBaseConfiguration.create();
@@ -97,6 +98,8 @@ public class mysqltohabse {
 		return deviceId+a_id[0]+a_id[1];
 	}
 	public static void getDataFormMysqlToHbase(String tableName) throws IOException {
+		BasicConfigurator.configure();
+		log.setLevel(Level.DEBUG);
 		ResultSet resultSet=null;
 		DBHelper db=new DBHelper();
 		String sql="SELECT  UniqueID,DeviceID,`Event`,Longitude,Latitude FROM "+
@@ -120,6 +123,7 @@ public class mysqltohabse {
         Result poiResult=null;
 		try {
 			resultSet=db.pst.executeQuery(sql);
+			log.debug(tableName + ":start copying data to hbase...");
 			HTable stlTable = new HTable(setHbaseConf(), tableName);
 			HTable poiTable = new HTable(setHbaseConf(), "pois");
 			while (resultSet.next()) {
@@ -169,14 +173,22 @@ public class mysqltohabse {
 					if(!poiList.isEmpty()){
 						poiTable.put(poiList);
 					}
+					log.debug(tableName + ":completing data copy!");
 			        stlList = new ArrayList<Put>();
 			        poiList = new ArrayList<Put>();
 				}
 				}
 				else {
-					
+					log.error("BaiduMapApi error:"+jsonObject.get("status").toString());
 				}
 			}
+			if (!stlList.isEmpty()) {
+				stlTable.put(stlList);
+				if(!poiList.isEmpty()){
+					poiTable.put(poiList);
+				}
+			}
+			log.debug(tableName + ":completed data copy!");
 			stlTable.close();
 			poiTable.close();
 		} catch (SQLException e) {
@@ -188,8 +200,11 @@ public class mysqltohabse {
 
 	}
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+		String hpois="pois";
+		String hstl="stl_p1_d";
+		String [] stl_columnfamily={"base","pois"};
+		String [] pois_columnfamily={"pois"};
+		creatHTable(hpois, pois_columnfamily);
 	}
 
 }
