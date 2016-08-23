@@ -13,9 +13,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -40,17 +45,23 @@ public class mysqltohabse {
 		Configuration conf=new Configuration();
 		conf=HBaseConfiguration.create();
 		conf.set("hbase.zookeeper.quorum", "zjmaster,zjslave1,zjslave2,zjslave3");
+		conf.addResource(new Path(System.getenv("HBASE_HOME"), "/conf/hbase-site.xml"));
+	    conf.addResource(new Path(System.getenv("HADOOP_HOME"), "/conf/core-site.xml"));
 		return conf;
+	}
+	public static void name() {
+		
 	}
 	public static Boolean creatHTable(String HTableName,String[] columnFamilys)  {
 		
-	try {
-		HBaseAdmin admin=new HBaseAdmin(setHbaseConf());
-		if (admin.tableExists(HTableName)) {
+	try (Connection connection= ConnectionFactory.createConnection(setHbaseConf());
+			Admin admin=connection.getAdmin()){
+		HTableDescriptor tableDescriptor=new HTableDescriptor(TableName.valueOf(HTableName));
+		if (admin.tableExists(tableDescriptor.getTableName())) {
 			admin.close();
 			return false;
 		} else {
-			HTableDescriptor tableDescriptor=new HTableDescriptor(HTableName);
+
 			for(String colFamily:columnFamilys)
 			{
 				tableDescriptor.addFamily( new HColumnDescriptor(colFamily));
