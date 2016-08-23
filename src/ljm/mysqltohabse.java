@@ -39,7 +39,7 @@ public class mysqltohabse {
 	private static Configuration setHbaseConf() {
 		Configuration conf=new Configuration();
 		conf=HBaseConfiguration.create();
-		conf.set("hbase.zookeeper.quorum", "zjmaster:2181,zjslave1:2181,zjslave2:2181,zjslave3:2181");
+		conf.set("hbase.zookeeper.quorum", "zjmaster,zjslave1,zjslave2,zjslave3");
 		return conf;
 	}
 	public static Boolean creatHTable(String HTableName,String[] columnFamilys)  {
